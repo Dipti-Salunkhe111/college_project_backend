@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routes import cognitive
+from routes import cognitive, users, emotions
 from db.mongo import db_connection 
 
 app = FastAPI()
@@ -19,7 +19,9 @@ app.add_middleware(
 )
 
 # Include the existing cognitive route
-app.include_router(cognitive.router, prefix="/api/cognitive", tags=["Cognitive"])
+app.include_router(cognitive.router, prefix="/api", tags=["Cognitive"])
+app.include_router(emotions.router, prefix="/api", tags=["Emotion"])
+app.include_router(users.router, prefix="/api/users", tags=["Authorization"])
 
 # Add a /test endpoint to verify the server is running
 @app.get("/test")

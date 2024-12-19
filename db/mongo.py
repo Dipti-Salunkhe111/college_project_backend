@@ -11,12 +11,8 @@ class DatabaseConnection:
     _client = None
     _db = None
 
-    def __init__(self):
-        # Ensure connection is established immediately
-        if not DatabaseConnection._client:
-            self.connect()
-
-    def connect(self):
+    @classmethod
+    def connect(cls):
         try:
             # Retrieve MongoDB connection string from environment variable
             mongo_uri = os.getenv('MONGO_URI')
@@ -25,14 +21,16 @@ class DatabaseConnection:
                 raise ValueError("MongoDB URI not found in environment variables")
             
             # Create MongoDB client
-            DatabaseConnection._client = MongoClient(mongo_uri)
+            cls._client = MongoClient(mongo_uri)
             
             # Verify connection
-            DatabaseConnection._client.admin.command('ismaster')
+            cls._client.admin.command('ismaster')
             print("Successfully connected to MongoDB")
             
             # Set database (replace with your actual database name)
-            DatabaseConnection._db = DatabaseConnection._client['college_project']
+            cls._db = cls._client['college_project']
+            
+            return cls._db
         
         except Exception as e:
             print(f"Critical Error connecting to MongoDB: {e}")
@@ -44,8 +42,8 @@ class DatabaseConnection:
         """
         Get the database instance
         """
-        if not cls._db:
-            cls._instance = DatabaseConnection()
+        if cls._db is None:
+            cls._db = cls.connect()
         return cls._db
 
     @classmethod
@@ -56,5 +54,5 @@ class DatabaseConnection:
         db = cls.get_database()
         return db[collection_name]
 
-# Create the connection immediately when the module is imported
-db_connection = DatabaseConnection()
+# Ensure connection is established when the module is imported
+db_connection = DatabaseConnection.connect()
