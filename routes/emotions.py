@@ -131,3 +131,25 @@ async def emotion_analysis(
             }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/emotion/status")
+async def get_emotion_status(current_user: dict = Depends(get_current_user)):
+    try:
+        # Fetch emotion analysis data from the database for the current user
+        analysis_collection = DatabaseConnection.get_collection("emotion_analyses")
+        emotion_data = list(analysis_collection.find({"user_id": str(current_user["_id"])}))
+        
+        if not emotion_data:
+            raise HTTPException(status_code=404, detail="No emotion analyses found for the user")
+
+        # Convert ObjectId to string for serialization
+        for data in emotion_data:
+            data["_id"] = str(data["_id"])
+
+        return {
+            "status": "success",
+            "message": "Emotion analysis data fetched successfully",
+            "data": emotion_data,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching emotion status: {str(e)}")

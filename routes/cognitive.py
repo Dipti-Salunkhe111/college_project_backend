@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Request
 from bson import ObjectId
+from fastapi.encoders import jsonable_encoder
 from datetime import datetime
 from db.mongo import DatabaseConnection
 from schemas.testSchema import TestDataSchema, PersonalityTestSubmission
@@ -93,20 +94,46 @@ async def submit_cognitive_test(
         )
     
 @router.get("/cognitive/status")
-async def get_cognitive_test_status(
-    current_user: dict = Depends(get_current_user)
-):
-    # Get cognitive results collection
-    cognitive_results_collection = DatabaseConnection.get_collection('cognitive_test_results')
-    
-    # Check if the user has completed the cognitive test
-    test_result = cognitive_results_collection.find_one({
-        "user_id": ObjectId(current_user['_id']),
-        "test_type": "Cognitive Assessment"
-    })
-    
-    # Return status
-    return {
-        "has_completed_test": test_result is not None,
-        "completed_at": test_result['submitted_at'] if test_result else None
-    }
+async def get_cognitive_test_status(email: str):
+    try:
+        # Get user collection
+        user_collection = DatabaseConnection.get_collection('users')
+
+        # Search for the user by email
+        user = user_collection.find_one({"email": email})
+        if not user:
+            raise HTTPException(
+                status_code=404,
+                detail="User not found"
+            )
+
+        user_id = user["_id"]
+
+        # Get cognitive results collection
+        cognitive_results_collection = DatabaseConnection.get_collection('cognitive_test_results')
+
+        # Check if the user has completed the cognitive test
+        test_result = cognitive_results_collection.find_one({
+            "user_id": ObjectId(user_id),
+            "test_type": "Cognitive Assessment"
+        })
+
+        if test_result:
+            # Convert ObjectId and other non-serializable fields
+            test_result["_id"] = str(test_result["_id"])
+            test_result["user_id"] = str(test_result["user_id"])
+            completed_at = test_result['submitted_at'].isoformat() if test_result['submitted_at'] else None
+        else:
+            completed_at = None
+
+        # Return status
+        return {
+            "has_completed_test": test_result is not None,
+            "completed_at": completed_at,
+            "test_data": test_result if test_result else None
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error fetching test status: {str(e)}"
+        )
