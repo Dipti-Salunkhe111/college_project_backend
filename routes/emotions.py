@@ -153,3 +153,35 @@ async def get_emotion_status(current_user: dict = Depends(get_current_user)):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching emotion status: {str(e)}")
+
+# Backend API for emotion data
+@router.get("/emotion/test-data")
+async def get_emotion_test_data(email: str):
+    try:
+        if not email:
+            raise HTTPException(status_code=400, detail="Email parameter is required.")
+
+        user_collection = DatabaseConnection.get_collection('users')
+        emotion_collection = DatabaseConnection.get_collection('emotion_analyses')
+
+        user = user_collection.find_one({"email": email})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        # Get the latest emotion analysis
+        emotion_data = emotion_collection.find_one(
+            {"user_id": str(user["_id"])},
+            sort=[("timestamp", -1)]
+        )
+
+        if not emotion_data:
+            raise HTTPException(status_code=404, detail="No emotion data found")
+
+        return {
+            "scores": emotion_data["scores"],
+            "type": emotion_data["type"],
+            "filenames": emotion_data["filenames"],
+            "timestamp": emotion_data["timestamp"]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
