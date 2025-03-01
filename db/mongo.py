@@ -2,6 +2,7 @@ from pymongo import MongoClient
 from dotenv import load_dotenv
 import os
 import sys
+import ssl
 
 # Load environment variables
 load_dotenv()
@@ -20,8 +21,14 @@ class DatabaseConnection:
             if not mongo_uri:
                 raise ValueError("MongoDB URI not found in environment variables")
             
-            # Create MongoDB client
-            cls._client = MongoClient(mongo_uri)
+            # Create MongoDB client with explicit SSL configuration
+            cls._client = MongoClient(
+                mongo_uri,
+                ssl=True,
+                ssl_cert_reqs=ssl.CERT_NONE,  # Try this setting for debugging
+                connectTimeoutMS=30000,
+                socketTimeoutMS=30000
+            )
             
             # Verify connection
             cls._client.admin.command('ismaster')
