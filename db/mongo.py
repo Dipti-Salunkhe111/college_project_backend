@@ -12,7 +12,7 @@ class DatabaseConnection:
     _db = None
 
     @classmethod
-    def connect(cls):
+    async def connect(cls):
         try:
             # Retrieve MongoDB connection string from environment variable
             mongo_uri = os.getenv('MONGO_URI')
@@ -34,8 +34,8 @@ class DatabaseConnection:
             )
             
             # Verify connection
-            cls._client.admin.command('ismaster')
-            print("Successfully connected to MongoDB")
+            cls._client.admin.command('ping')
+            print("✅ Successfully connected to MongoDB")
             
             # Set database
             cls._db = cls._client['college_project']
@@ -43,7 +43,7 @@ class DatabaseConnection:
             return cls._db
         
         except Exception as e:
-            print(f"Critical Error connecting to MongoDB: {e}")
+            print(f"❌ Critical Error connecting to MongoDB: {e}")
             print("Exiting application due to database connection failure")
             sys.exit(1)  # Exit the application if database connection fails
 
@@ -64,5 +64,14 @@ class DatabaseConnection:
         db = cls.get_database()
         return db[collection_name]
 
+    @classmethod
+    async def disconnect(cls):
+        """Disconnect from MongoDB"""
+        if cls._client:
+            cls._client.close()
+            cls._client = None
+            cls._db = None
+            print("❌ MongoDB connection closed")
+
 # Ensure connection is established when the module is imported
-db_connection = DatabaseConnection.connect()
+db_connection = DatabaseConnection()
