@@ -7,8 +7,8 @@ app = FastAPI()
 
 # Allow requests from your frontend
 origins = [
-    "http://localhost:5173",  # Local frontend (Vite)
-    "https://college-project-frontend-akq5wt7mt-dipti-salunkhes-projects.vercel.app"  # Vercel deployed frontend
+    "http://localhost:5173",  # Local development (Vite)
+    "https://college-project-frontend-three.vercel.app"  # Updated Vercel frontend URL
 ]
 
 app.add_middleware(
