@@ -7,7 +7,7 @@ app = FastAPI()
 
 # Allow requests from your React app
 origins = [
-    "http://localhost:5173",  # Adjust this to match your Vite app's URL
+    "http://localhost:5173", 'https://college-project-backend-msav.onrender.com'  # Adjust this to match your Vite app's URL
 ]
 
 app.add_middleware(
