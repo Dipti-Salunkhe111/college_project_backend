@@ -11,3 +11,4 @@ uvicorn==0.34.0
 dnspython==2.7.0
 email-validator==2.2.0
 python-multipart==0.0.19
+tensorflow==2.18.0
